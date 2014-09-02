@@ -3,7 +3,6 @@ FROM ubuntu:14.04
 RUN apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y \
-    git \
     python2.7 \
     wget \
     && apt-get autoremove \
@@ -18,12 +17,8 @@ RUN wget http://downloads.openmicroscopy.org/bio-formats/5.0.2/artifacts/bftools
 RUN mkdir /bftools; cd bftools; unzip ../bftools.zip; rm ../bftools.zip
 ENV PATH $PATH:/bftools
 
-# have to do some trick here so that the next command (git) will always be run...
-RUN echo cachebust 311111112
-
-RUN git clone https://github.com/hajaalin/lmu-scripts.git
-WORKDIR /lmu-scripts
-RUN git checkout run-with-docker
+ADD python /python
+WORKDIR python
 
 # run as non-root user
 RUN adduser --disabled-login lmu
