@@ -137,7 +137,7 @@ if __name__=='__main__':
     parser.add_option('-n', '--dryrun', action="store_true", \
                       default=False, help="Print actions but do not execute.")
     parser.add_option('-i', '--input', default='/input', help="Input directory [default: %default].")
-    parser.add_option('-s', '--staging', default='/staging', help="Staging directory [default: %default].")
+    parser.add_option('-s', '--staging', default='/tmp', help="Staging directory [default: %default].")
     parser.add_option('-o', '--output', default='/output', help="Output directory [default: %default].")
     
     opts,args = parser.parse_args()
