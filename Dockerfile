@@ -21,9 +21,9 @@ WORKDIR python
 
 # run as non-root user
 RUN adduser --disabled-login lmu
-#USER lmu
+USER lmu
 
 # run the conversion script when container is run
-#ENTRYPOINT ["python2.7", "stage_cellomics2tiff.py"]
-CMD /bin/bash
+ENTRYPOINT ["python2.7", "stage_cellomics2tiff.py"]
+#CMD /bin/bash
 

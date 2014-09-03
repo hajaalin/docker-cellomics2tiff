@@ -106,7 +106,7 @@ def stageAndConvert(dir_in):
     dir_out = os.path.join(OUTPUT_ROOT,creator)
     if not os.path.isdir(dir_out):
         os.makedirs(dir_out)
-        
+
     start_time_copy = time.time()
     msg = "Copying " + staging_out + " to " + dir_out
     print "stage_cellomics2tiff:",msg
@@ -118,11 +118,21 @@ def stageAndConvert(dir_in):
         os.system(cmd)
     print >> logfile, "Time elapsed: " + str(time.time() - start_time_copy) + "s"
 
+   # Remove data from staging area
+    msg = "Cleaning up staging area"
+    print "stage_cellomics2tiff:", msg
+    print >> logfile, msg
+    cmd = "rm -rf " + staging_in + " " + staging_out
+    print cmd
+    print >> logfile, cmd
+    if not DRY_RUN:
+        os.system(cmd)
+
     print >> logfile, "Total time elapsed: " + str(time.time() - start_time) + "s"
     logfile.close()
     print
 
-
+ 
 ##
 ## Main part
 ##
