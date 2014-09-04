@@ -11,11 +11,11 @@ git \
 RUN git clone https://github.com/sstephenson/bats.git
 RUN cd bats && ./install.sh /usr/local
 
-RUN mkdir /test
-ADD test.t /test/test.t
+ADD test.bats /test/
+WORKDIR /test
 
-RUN chown lmu: /test/test.t
+RUN chown lmu: test.bats
 USER lmu
 
-ENTRYPOINT ["bats", "/test/test.t"]
+ENTRYPOINT ["bats", "test.bats"]
 
