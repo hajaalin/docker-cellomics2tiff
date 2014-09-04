@@ -159,6 +159,9 @@ if __name__=='__main__':
     STAGING_ROOT = opts.staging
     OUTPUT_ROOT = opts.output
 
+    print "INPUT_ROOT:", INPUT_ROOT
+    print "OUTPUT_ROOT:", OUTPUT_ROOT
+
     # lock file
     pidfile_name = os.path.join(STAGING_ROOT, "stage_cellomics2tiff.pid")
 
@@ -181,7 +184,9 @@ if __name__=='__main__':
     except Exception as e:
         print "Failed to read input directory."
         print e.strerror
-        
+    
+    print "datasets:", datasets
+
     for dir_in in datasets:
         try:
             stageAndConvert(dir_in)
