@@ -14,16 +14,19 @@ teardown () {
   rm -rf /tmp/input /tmp/output
 }
 
-#@test "length of ls" {
-#  result=`ls -1 / | wc -l`
-#  [ "$result" -eq 2 ]
-#}
-
 @test "amount of tifs vs c01s" {
   # run conversion
   python2.7 /python/stage_cellomics2tiff.py -i /tmp/input -o /tmp/output
   tifs=`find /tmp/output -name "*.tif" | wc -l`
   c01s=`find /tmp/input -name "*.C01" | wc -l`
   [ "$tifs" -eq "$c01s" ]
+}
+
+@test "archival" {
+  # run archival
+  c01s=`find /tmp/input -name "*.C01" | wc -l`
+  python2.7 /python/stage_cellomics2tiff.py -i /tmp/input -a /tmp/output
+  archived=`find /tmp/output -name "*.C01" | wc -l`
+  [ "$archived" -eq "$c01s" ]
 }
 
