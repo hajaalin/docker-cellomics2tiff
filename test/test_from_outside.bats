@@ -21,11 +21,11 @@ setup () {
 }
 
 # cleanup
-teardown () {
-  rm -rf $io_root/input/*
-  rm -rf $io_root/output/*
-  rm -rf $io_root/archive/*
-}
+#teardown () {
+#  rm -rf $io_root/input/*
+#  rm -rf $io_root/output/*
+#  rm -rf $io_root/archive/*
+#}
 
 @test "testdata" {
   c01s=`find $io_root/input -name "*.C01" | wc -l`
