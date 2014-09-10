@@ -17,11 +17,6 @@ RUN wget http://downloads.openmicroscopy.org/bio-formats/5.0.2/artifacts/bftools
 RUN mkdir /bftools; cd bftools; unzip ../bftools.zip; rm ../bftools.zip
 ENV PATH $PATH:/bftools
 
-# add source and test directories
-ADD python /python
-ADD test /test
-WORKDIR python
-
 # run as non-root user
 RUN adduser lmu
 
@@ -33,6 +28,13 @@ VOLUME ["/input", "/output", "/archive"]
 
 # run the conversion script when container is run
 ENTRYPOINT ["python2.7", "stage_cellomics2tiff.py"]
-#ENTRYPOINT ["ls", "-l", "/input"]
 
-USER lmu
+# add source and test directories
+ADD python /python
+ADD test /test
+WORKDIR python
+
+# run as root for now...
+#USER lmu
+
+
