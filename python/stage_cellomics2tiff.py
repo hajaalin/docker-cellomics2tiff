@@ -168,7 +168,7 @@ if __name__=='__main__':
     print "OUTPUT_ROOT:", OUTPUT_ROOT
 
     # lock file
-    pidfile_name = os.path.join(STAGING_ROOT, "stage_cellomics2tiff.pid")
+    pidfile_name = os.path.join(OUTPUT_ROOT, "stage_cellomics2tiff.pid")
 
     # check if conversion is already running
     if os.path.isfile(pidfile_name):
