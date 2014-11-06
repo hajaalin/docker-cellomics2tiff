@@ -21,10 +21,10 @@ ENV PATH $PATH:/bftools
 RUN adduser lmu
 
 # create share volumes for data, add empty files to prevent volumes belonging to root
-RUN mkdir /input /output /archive
-RUN touch /input/ph /output/ph /archive/ph
-RUN chown -R lmu:lmu /input /output /archive
-VOLUME ["/input", "/output", "/archive"]
+#RUN mkdir /input /output /archive
+#RUN touch /input/ph /output/ph /archive/ph
+#RUN chown -R lmu:lmu /input /output /archive
+#VOLUME ["/input", "/output", "/archive"]
 
 # run the conversion script when container is run
 ENTRYPOINT ["python2.7", "stage_cellomics2tiff.py"]
