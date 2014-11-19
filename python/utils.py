@@ -10,7 +10,7 @@ class CellomicsUtils:
         values = csv.readline().split(',')
         csv.close()
 
-        for i in range(1,len(keys)+1):
+        for i in range(1,len(keys)):
             # check that the value field exists,
             # it may be missing because of metadata error
             if keys[i] == "Creator" and len(values) > i:
