@@ -1,15 +1,20 @@
 #!/usr/bin/python
 import datetime
-import math, sys, time
-import string
-import subprocess
 import glob
+import logging
+import math
 from optparse import OptionParser
 import os
+import string
+import subprocess
+import sys
+import time
 import traceback
 
 from mp_cellomics2tiff import CellomicsConverter
 from utils import CellomicsUtils
+
+logger = None
 
 DRY_RUN = False
 
@@ -28,45 +33,42 @@ cutils = CellomicsUtils()
 
 def is_converted(dataset):
     # list of converted datasets, in subfolders by user
+    logger.debug("searching conversions: " + OUTPUT_ROOT + "/*/*")
     converted = glob.glob(OUTPUT_ROOT + "/*/*")
     for c in converted:
         # check if the folder name matches
         if string.find(c,dataset + CONVERSION_POSTFIX) != -1 and os.path.isdir(c):
-            print "stage_cellomics2tiff: found existing conversion:",c 
+            logger.debug("found existing conversion: " + c) 
             # return true if the folder has been converted already
             if cutils.isDatasetConverted(dir_in,c):
                 #print "stage_cellomics2tiff:","CURRENT", dataset + CONVERSION_POSTFIX
                 #print "stage_cellomics2tiff:","CONVERTED",c
-                print "stage_cellomics2tiff: existing conversion is up to date, skipping..."
-                print
+                logger.debug("existing conversion is up to date, skipping...")
                 return True
             else:
-                print "stage_cellomics2tiff: existing conversion is not complete or up to date."
+                logger.debug("existing conversion is not complete or up to date.")
                 return False
 
-def _run_and_log(cmd,msg,logfile):
+def _run_and_log(cmd,msg):
     start = time.time()
-    print "stage_cellomics2tiff:_run:", msg
-    print "stage_cellomics2tiff:_run:", cmd
-    print >> logfile, "stage_cellomics2tiff:_run:", msg
-    print >> logfile, "stage_cellomics2tiff:_run:", cmd
+    logger.info(msg)
+    logger.info(cmd)
     if not DRY_RUN:
         os.system(cmd)
-    print "stage_cellomics2tiff:_run: Completed in " + str(time.time()-start) + "s."
-    print
-    print >> logfile,""
+    logger.info("Completed in " + str(time.time()-start) + "s.")
 
-def archive(dir_in, archive,logfile):
+def archive(dir_in, archive):
     dir_in = os.path.join(INPUT_ROOT, dir_in)
     msg = "Archiving " + dir_in + " to " + archive 
     cmd = "rsync -av --remove-source-files " + dir_in + " " + archive + "/"
     if DRY_RUN:
         cmd = "rsync -avn --remove-source-files " + dir_in + " " + archive + "/"
-    _run_and_log(cmd,msg,logfile)
+    _run_and_log(cmd,msg)
 
 def stageAndConvert(dir_in):
+    logger.debug(INPUT_ROOT + " " + dir_in)
     dir_in = os.path.join(INPUT_ROOT,dir_in)
-    print "stage_cellomics2tiff INPUT:",dir_in
+    logger.info("dir_in:" + dir_in)
 
     # skip items that are not directories
     if not os.path.isdir(dir_in):
@@ -74,7 +76,7 @@ def stageAndConvert(dir_in):
 
     # skip of not a Cellomics dataset
     if not cutils.isCellomicsDataset(dir_in):
-        print "stage_cellomics2tiff: not a C01 dataset:",dir_in
+        logger.info("not a C01 dataset:" + dir_in)
         return
     
     head,dataset = os.path.split(dir_in)
@@ -91,29 +93,22 @@ def stageAndConvert(dir_in):
     if not os.path.isdir(staging_out):
         os.makedirs(staging_out)
 
-    # Create log file
-    if not os.path.isdir(os.path.join(OUTPUT_ROOT,'log')):
-        os.makedirs(os.path.join(OUTPUT_ROOT,'log'))
-    t = time.time()
-    ft = datetime.datetime.fromtimestamp(t).strftime('%Y%m%d-%H%M%S')
-    logfile = open(OUTPUT_ROOT+'/log/%s_stage_cellomics2tiff_%s.log'%(dataset,ft),'w')
     start_time = time.time()
 
     # Copy data to the cluster
-    msg ="Copying (rsync) data to " + staging_in + "..."
+    msg ="copying (rsync) data to " + staging_in + "..."
     cmd = "rsync -rt " + dir_in + "/ " + staging_in
-    _run_and_log(cmd,msg,logfile)
+    _run_and_log(cmd,msg)
 
     # Convert the data
     start_time_convert = time.time()
-    msg = "Converting..."
-    print "stage_cellomics2tiff:",msg 
-    print >> logfile, msg
+    logger.info("converting...")
     creator = "creator"
+    
     if not DRY_RUN:
         converter = CellomicsConverter()
         converter.convert(staging_in,staging_out)
-        print >> logfile, "Time elapsed: " + str(time.time() - start_time_convert) + "s"
+        logger.info("Time elapsed: " + str(time.time() - start_time_convert) + "s")
 
         # find the creator of the data from metadata
         csv = os.path.join(staging_out,"metadata","asnPlate.csv")
@@ -123,18 +118,16 @@ def stageAndConvert(dir_in):
     dir_out = os.path.join(OUTPUT_ROOT,creator)
     if not os.path.isdir(dir_out):
         os.makedirs(dir_out)
-    msg = "Copying " + staging_out + " to " + dir_out
+    msg = "copying " + staging_out + " to " + dir_out
     cmd = "rsync -r " + staging_out + " " + dir_out
-    _run_and_log(cmd,msg,logfile)
+    _run_and_log(cmd,msg)
 
     # Remove data from staging area
-    msg = "Cleaning up staging area"
+    msg = "cleaning up staging area"
     cmd = "rm -rf " + staging_in + " " + staging_out
-    _run_and_log(cmd,msg,logfile)
+    _run_and_log(cmd,msg)
 
-    print >> logfile, "Total time elapsed: " + str(time.time() - start_time) + "s"
-    logfile.close()
-    print
+    logger.info("Total time elapsed: " + str(time.time() - start_time) + "s")
 
  
 ##
@@ -154,25 +147,54 @@ if __name__=='__main__':
     parser.add_option('-s', '--staging', default='/tmp', help="Staging directory [default: %default].")
     parser.add_option('-o', '--output', default='/output', help="Output directory [default: %default].")
     parser.add_option('-a', '--archive', help="Archive directory: check if datasets in -i have been converted to -o, if yes, move -i to archive.")
-    
-    opts,args = parser.parse_args()
-    if opts.dryrun:
-        print "DRY RUN"
-        DRY_RUN = True
+    parser.add_option('-d','--debug', action="store_true", help="Set log level to DEBUG.")
 
+    opts,args = parser.parse_args()
+     
     INPUT_ROOT = opts.input
     STAGING_ROOT = opts.staging
     OUTPUT_ROOT = opts.output
 
-    print "INPUT_ROOT:", INPUT_ROOT
-    print "OUTPUT_ROOT:", OUTPUT_ROOT
+    ARCHIVE_ROOT = None
+    if opts.archive:
+        ARCHIVE_ROOT = opts.archive
+ 
+    # log directory
+    if opts.archive:
+        logdir = os.path.join(ARCHIVE_ROOT, "log")
+    else:
+        logdir = os.path.join(OUTPUT_ROOT, "log")
+    if not os.path.isdir(logdir):
+        os.makedirs(logdir)
+
+    # log file
+    t = time.time()
+    ft = datetime.datetime.fromtimestamp(t).strftime('%Y%m%d-%H%M%S')
+    logfile = os.path.join(logdir,'sta_cellomics2tiff_%s.log'%(ft))
+
+    # logger
+    loglevel = logging.INFO
+    if opts.debug:
+        loglevel = logging.DEBUG
+    logformat = '[%(pathname)s:%(funcName)s:%(lineno)d] %(levelname)s - %(message)s'
+    logging.basicConfig(filename=logfile,level=loglevel,format=logformat)
+    logger = logging.getLogger(__name__)
+
+
+    if opts.dryrun:
+        logger.info("DRY RUN")
+        DRY_RUN = True
+
+    logger.info("INPUT_ROOT: " + INPUT_ROOT)
+    logger.info("OUTPUT_ROOT: " + OUTPUT_ROOT)
+    logger.info("ARCHIVE_ROOT: " + str(ARCHIVE_ROOT))
 
     # lock file
     pidfile_name = os.path.join(OUTPUT_ROOT, "stage_cellomics2tiff.pid")
 
     # check if conversion is already running
     if os.path.isfile(pidfile_name):
-        print "Conversion is already running, exiting..."
+        logger.info("Conversion is already running, exiting...")
         sys.exit(0)
 
     # write process id to lock file
@@ -181,42 +203,26 @@ if __name__=='__main__':
     print >> pidfile, str(pid)
     pidfile.close()
 
-    # check archive area if requested
-    ARCHIVE_ROOT = None
-    archive_log = None
-    if opts.archive:
-        ARCHIVE_ROOT = opts.archive
-        if not os.path.isdir(os.path.join(ARCHIVE_ROOT,"log")):
-            os.makedirs(os.path.join(ARCHIVE_ROOT,"log"))
-        t = time.time()
-        ft = datetime.datetime.fromtimestamp(t).strftime('%Y%m%d-%H%M%S')
-        logfile = open(ARCHIVE_ROOT+'/log/archive_cellomics2tiff_%s.log'%(ft),'w')
-
     # process all CellInsight datasets in the input directory
     datasets = []
     try:
         datasets = os.listdir(INPUT_ROOT)
     except Exception as e:
-        print "Failed to read input directory."
-        print e.strerror
+        logger.exception("Failed to read input directory.")
     
-    print "datasets:", datasets
+    logger.info("datasets:" + str(datasets))
 
     for dir_in in datasets:
         try:
             if ARCHIVE_ROOT:
-                archive(dir_in,ARCHIVE_ROOT,logfile)
+                archive(dir_in,ARCHIVE_ROOT)
             else:
                 stageAndConvert(dir_in)
         except Exception as e:
-            print "Failed to convert (or archive) " + dir_in
-            traceback.print_exc()
-            
-    if ARCHIVE_ROOT:
-        logfile.close()
+            logger.exception("Failed to convert (or archive) " + dir_in)
 
     # remove lock file
     os.remove(pidfile_name)
 
-    print "stage_cellomics2tiff:","Done."
+    logger.info("Done.")
 

@@ -1,6 +1,9 @@
 import glob
 import os
+import logging
 import re
+
+logger = logging.getLogger(__name__)
 
 class CellomicsUtils:
     def findCreator(self,asnPlate):
@@ -22,7 +25,7 @@ class CellomicsUtils:
                 creator = values[i].replace('"','')
 
         if creator == UNKNOWN:
-            print "CellomicsUtils:findCreator: creator not found in ", asnPlate
+            logger.error("CellomicsUtils:findCreator: creator not found in ", asnPlate)
 
         return creator
 
@@ -45,9 +48,9 @@ class CellomicsUtils:
 
             # if a tif file is missing, conversion is not complete
             if not os.path.isfile(tif):
-                print "C01:",C01
-                print "TIF:",tif
-                print "TIF file is missing."
+                logger.debug("C01:" + C01)
+                logger.debug("TIF:" + tif)
+                logger.info("TIF file is missing: " + tif)
                 return False
             # if the tif file exists but is older than C01,
             # conversion is not up to date
@@ -55,11 +58,11 @@ class CellomicsUtils:
                 otime = os.stat(C01).st_mtime
                 ctime = os.stat(tif).st_mtime
                 if otime > ctime:
-                    print "C01:",C01
-                    print "TIF:",tif
-                    print "otime",str(otime)
-                    print "ctime",str(ctime)
-                    print "TIF file is out of date."
+                    logger.debug("C01:" + C01)
+                    logger.debug("TIF:" + tif)
+                    logger.debug("otime" + str(otime))
+                    logger.debug("ctime" + str(ctime))
+                    logger.info("TIF file is out of date: " + tif)
                     return False
 
         return True

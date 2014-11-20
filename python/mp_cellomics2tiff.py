@@ -19,6 +19,8 @@ import shutil
 from mdb_export import mdb_export
 from utils import *
 
+logger = logging.getLogger(__name__)
+
 cutils = CellomicsUtils()
 
 def cellomics2tiff((file_in,dir_out)):
@@ -40,11 +42,11 @@ def cellomics2tiff((file_in,dir_out)):
         #subprocess.call(cmd,  stdout=FNULL, shell=False)
         #FNULL.close()
         cmd = 'bfconvert -overwrite -nogroup %s %s > /dev/null'%(file_in,file_out)
-        #print cmd
+        logger.debug(cmd)
         os.system(cmd)
     else:
         cmd = ['bfconvert','-nogroup',file_in,file_out]
-        print " ".join(cmd)
+        logger.debug(" ".join(cmd))
         subprocess.call(cmd,  shell=True)
 
 
@@ -53,53 +55,36 @@ class CellomicsConverter:
     
     def convert(self,inputDir, outputDir):
         """Converts a folder of C01 files."""
-        print "mp_cellomics2tiff:","INPUT:", inputDir
-        print "mp_cellomics2tiff:","OUTPUT:", outputDir
+        logger.info("INPUT:" + inputDir)
+        logger.info("OUTPUT:", outputDir)
 
         # input image files
         c01s = glob.glob(inputDir + "/*.C01")
 
-        if os.path.isdir(outputDir):
-            # check if entire dataset is already converted
-            if cutils.isDatasetConverted(inputDir,outputDir):
-                logfile = open(os.path.join(outputDir,'cellomics2tiff_error.log'),'w')
-                msg = "Seems that data was converted already, stopping."
-                print >> logfile, msg
-                print "mp_cellomics2tiff:",msg
-                logfile.close()
-                return
-        else:
-            os.makedirs(outputDir)
+        if not os.path.isdir(outputDir):
+           os.makedirs(outputDir)
 
         metadataDir = os.path.join(outputDir,"metadata")
         if not os.path.isdir(metadataDir):
             os.makedirs(metadataDir)
             
-        logging.basicConfig(filename=outputDir+'/cellomics2tiff.log', format='%(levelname)s:%(message)s', level=logging.DEBUG)
-        logging.basicConfig(level=logging.DEBUG)
-
         # convert the metadata in MS Access files to CSV             
-        msg = "Converting metadata to ", metadataDir
-        print "mp_cellomics2tiff:",msg 
+        logger.info("Converting metadata to " + metadataDir)
         mdbs = glob.glob(inputDir + "/*.MDB")
         mdbs.extend(glob.glob(inputDir + "/*.mdb"))
         for mdb in mdbs:
-            print "MDB:",mdb
+            logger.info("MDB: " + mdb)
             mdb_export(mdb, metadataDir)
 
         # Convert the data
         start_time_convert = time.time()
-        msg = "Converting..."
-        print "mp_cellomics2tiff:",msg 
-        logging.info(msg)
+        logger.info("Converting...")
         pool = multiprocessing.Pool(None)
         files = glob.glob(inputDir + "/*.C01")
 
         # http://stackoverflow.com/questions/8521883/multiprocessing-pool-map-and-function-with-two-arguments
         r = pool.map(cellomics2tiff, zip(files,repeat(outputDir)))
-        msg = "Time elapsed: " + str(time.time() - start_time_convert) + "s"
-        print "mp_cellomics2tiff:",msg
-        logging.info(msg)
+        logger.info("Time elapsed: " + str(time.time() - start_time_convert) + "s")
 
 
 
