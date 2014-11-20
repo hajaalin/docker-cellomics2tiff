@@ -38,15 +38,15 @@ def is_converted(dataset):
     for c in converted:
         # check if the folder name matches
         if string.find(c,dataset + CONVERSION_POSTFIX) != -1 and os.path.isdir(c):
-            logger.debug("found existing conversion: " + c) 
+            logger.info("found existing conversion: " + c) 
             # return true if the folder has been converted already
             if cutils.isDatasetConverted(dir_in,c):
                 #print "stage_cellomics2tiff:","CURRENT", dataset + CONVERSION_POSTFIX
                 #print "stage_cellomics2tiff:","CONVERTED",c
-                logger.debug("existing conversion is up to date, skipping...")
+                logger.info("existing conversion is up to date, skipping...")
                 return True
             else:
-                logger.debug("existing conversion is not complete or up to date.")
+                logger.info("existing conversion is not complete or up to date.")
                 return False
 
 def _run_and_log(cmd,msg):
