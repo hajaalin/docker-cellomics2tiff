@@ -4,7 +4,12 @@ import re
 
 class CellomicsUtils:
     def findCreator(self,asnPlate):
-        creator = "UnknownCreator"
+        UNKNOWN = "UnknownCreator"
+        creator = UNKNOWN
+
+        # key to look for in csv
+        KEY_CREATOR = "Creator"
+
         csv = open(asnPlate,'r')
         keys = csv.readline().split(',')
         values = csv.readline().split(',')
@@ -13,9 +18,12 @@ class CellomicsUtils:
         for i in range(1,len(keys)):
             # check that the value field exists,
             # it may be missing because of metadata error
-            if keys[i] == "Creator" and len(values) > i:
+            if keys[i] == KEY_CREATOR and len(values) > i:
                 creator = values[i].replace('"','')
-        
+
+        if creator == UNKNOWN:
+            print "CellomicsUtils:findCreator: creator not found in ", asnPlate
+
         return creator
 
     def getTifPath(self,C01,outputDir):
