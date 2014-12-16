@@ -180,6 +180,11 @@ if __name__=='__main__':
     logging.basicConfig(filename=logfile,level=loglevel,format=logformat)
     logger = logging.getLogger(__name__)
 
+    ch = logging.StreamHandler(sys.stdout)
+    ch.setLevel(loglevel)
+    formatter = logging.Formatter(logformat)    
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
 
     if opts.dryrun:
         logger.info("DRY RUN")
