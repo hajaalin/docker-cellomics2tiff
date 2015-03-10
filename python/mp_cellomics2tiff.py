@@ -56,7 +56,7 @@ class CellomicsConverter:
     def convert(self,inputDir, outputDir):
         """Converts a folder of C01 files."""
         logger.info("INPUT:" + inputDir)
-        logger.info("OUTPUT:", outputDir)
+        logger.info("OUTPUT:" + outputDir)
 
         # input image files
         c01s = glob.glob(inputDir + "/*.C01")
