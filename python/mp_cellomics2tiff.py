@@ -84,6 +84,8 @@ class CellomicsConverter:
 
         # http://stackoverflow.com/questions/8521883/multiprocessing-pool-map-and-function-with-two-arguments
         r = pool.map(cellomics2tiff, zip(files,repeat(outputDir)))
+        pool.close()
+        pool.join()
         logger.info("Time elapsed: " + str(time.time() - start_time_convert) + "s")
 
 
